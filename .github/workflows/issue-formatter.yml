@@ -117,14 +117,17 @@ jobs:
       - name: Run opencode
         shell: bash
         run: |
+          set +e
           opencode run "$(cat /tmp/prompt.txt)" \
-            --model opencode-go/glm-5.2 \
+            --model opencode/mimo-v2.5-free \
             --format json \
             --dangerously-skip-permissions \
             > /tmp/events.ndjson 2> /tmp/opencode.log
-          echo "::group::opencode log (last 40 lines)"
-          tail -n 40 /tmp/opencode.log || true
+          status=$?
+          echo "::group::opencode log (last 80 lines)"
+          tail -n 80 /tmp/opencode.log || true
           echo "::endgroup::"
+          exit $status
 
       - name: Parse and validate result
         shell: bash
