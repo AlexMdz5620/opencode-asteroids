@@ -35,6 +35,8 @@ const SKINS = [
     name: 'CLÁSICA',
     color: '#fff',
     thrustColor: 'rgba(255, 130, 0, 0.85)',
+    scale: 1,
+    scoreMultiplier: 1,
     draw(ctx, thrusting) {
       ctx.strokeStyle = this.color;
       ctx.lineWidth   = 1.5;
@@ -60,6 +62,8 @@ const SKINS = [
     name: 'DARD',
     color: '#0ff',
     thrustColor: 'rgba(0, 255, 255, 0.85)',
+    scale: 1,
+    scoreMultiplier: 1,
     draw(ctx, thrusting) {
       ctx.strokeStyle = this.color;
       ctx.lineWidth   = 1.5;
@@ -87,6 +91,8 @@ const SKINS = [
     name: 'DELTA',
     color: '#0f0',
     thrustColor: 'rgba(0, 255, 100, 0.85)',
+    scale: 1,
+    scoreMultiplier: 1,
     draw(ctx, thrusting) {
       ctx.strokeStyle = this.color;
       ctx.lineWidth   = 1.5;
@@ -113,6 +119,8 @@ const SKINS = [
     name: 'HEX',
     color: '#f0f',
     thrustColor: 'rgba(255, 0, 255, 0.85)',
+    scale: 1,
+    scoreMultiplier: 1,
     draw(ctx, thrusting) {
       ctx.strokeStyle = this.color;
       ctx.lineWidth   = 1.5;
@@ -132,6 +140,33 @@ const SKINS = [
         ctx.moveTo(-10, -3);
         ctx.lineTo(-10 - rand(5, 11), 0);
         ctx.lineTo(-10,  3);
+        ctx.strokeStyle = this.thrustColor;
+        ctx.stroke();
+      }
+    },
+  },
+  {
+    name: 'GIGANTE',
+    color: '#a855f7',
+    thrustColor: 'rgba(168, 85, 247, 0.85)',
+    scale: 2,
+    scoreMultiplier: 2,
+    draw(ctx, thrusting) {
+      ctx.strokeStyle = this.color;
+      ctx.lineWidth   = 1.5;
+      ctx.lineJoin    = 'round';
+      ctx.beginPath();
+      ctx.moveTo( 20,  0);
+      ctx.lineTo(-12, -9);
+      ctx.lineTo( -7,  0);
+      ctx.lineTo(-12,  9);
+      ctx.closePath();
+      ctx.stroke();
+      if (thrusting && Math.random() > 0.35) {
+        ctx.beginPath();
+        ctx.moveTo(-8, -4);
+        ctx.lineTo(-8 - rand(6, 14), 0);
+        ctx.lineTo(-8,  4);
         ctx.strokeStyle = this.thrustColor;
         ctx.stroke();
       }
@@ -310,13 +345,13 @@ class Ship {
     this.angle  = -Math.PI / 2;
     this.vx     = 0;
     this.vy     = 0;
-    this.radius = 12;
     this.thrusting     = false;
     this.invincible    = 3;
     this.shootCooldown = 0;
     this.dead          = false;
     const saved = parseInt(localStorage.getItem('asteroids_skin'), 10);
     this.skinIndex = Number.isInteger(saved) && saved >= 0 && saved < SKINS.length ? saved : 0;
+    this.radius = 12 * (SKINS[this.skinIndex].scale || 1);
   }
 
   update(dt) {
@@ -348,7 +383,8 @@ class Ship {
   tryShoot() {
     if (this.shootCooldown > 0 || this.dead) return [];
     this.shootCooldown = 0.2;
-    const NOSE = 21;
+    const s = SKINS[this.skinIndex].scale || 1;
+    const NOSE = 21 * s;
     const ox = this.x + Math.cos(this.angle) * NOSE;
     const oy = this.y + Math.sin(this.angle) * NOSE;
     if (tripleTimer > 0) {
@@ -368,6 +404,8 @@ class Ship {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
+    const s = SKINS[this.skinIndex].scale || 1;
+    ctx.scale(s, s);
     SKINS[this.skinIndex].draw(ctx, this.thrusting);
     ctx.restore();
 
@@ -688,7 +726,7 @@ function update(dt) {
       if (!a.dead && !b.dead && dist(b, a) < a.radius) {
         b.dead = true;
         a.dead = true;
-        score += POINTS[a.size];
+        score += POINTS[a.size] * (SKINS[ship.skinIndex].scoreMultiplier || 1);
         explode(a.x, a.y, a.size * 5);
         newAsteroids.push(...a.split());
         if (Math.random() < 0.15) {
@@ -741,7 +779,7 @@ function update(dt) {
       if (!s.dead && !b.dead && dist(b, s) < s.radius) {
         b.dead = true;
         s.dead = true;
-        score += 200;
+        score += 200 * (SKINS[ship.skinIndex].scoreMultiplier || 1);
         explode(s.x, s.y, 12);
       }
     }
